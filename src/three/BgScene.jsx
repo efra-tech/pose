@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Float, Sparkles } from '@react-three/drei'
+import { Float } from '@react-three/drei'
 import * as THREE from 'three'
 import { cardTexture } from './textures'
 import { pointer, prefersReducedMotion } from './pointer'
@@ -8,10 +8,10 @@ import { pointer, prefersReducedMotion } from './pointer'
 // Each card is one service. Drop a real photo at public/photos/<slug>.jpg and it
 // replaces the generated artwork automatically.
 export const SERVICES = [
-  { slug: 'portrait', label: 'PORTRAIT\nPHOTOGRAPHY', alt: 'Portrait photography by Pose Photography', a: '#3b2a8f', b: '#c04fd0' },
-  { slug: 'wedding', label: 'WEDDING\nPHOTOGRAPHY', alt: 'Wedding photography by Pose Photography', a: '#5a3a7a', b: '#f0b3d8' },
-  { slug: 'event', label: 'EVENT\nPHOTOGRAPHY', alt: 'Event photography by Pose Photography', a: '#1a2a80', b: '#6a4dff' },
-  { slug: 'senior', label: 'SENIOR\nPHOTOS', alt: 'Senior photos by Pose Photography', a: '#7a2a6a', b: '#4b6bff' },
+  { slug: 'portrait', label: 'Portrait\nPhotography', alt: 'Portrait photography by Pose Photography', a: '#8fa49d', b: '#4f6764' },
+  { slug: 'wedding', label: 'Wedding\nPhotography', alt: 'Wedding photography by Pose Photography', a: '#d2c1aa', b: '#9a8570' },
+  { slug: 'event', label: 'Event\nPhotography', alt: 'Event photography by Pose Photography', a: '#8a929c', b: '#4f5864' },
+  { slug: 'senior', label: 'Senior\nPhotos', alt: 'Senior photos by Pose Photography', a: '#c9a68c', b: '#8c6a55' },
 ]
 
 function usePhoto(service) {
@@ -47,6 +47,21 @@ function usePhoto(service) {
   return tex
 }
 
+// One blurred rectangle shared by every print as its wall shadow.
+const SHADOW = (() => {
+  if (typeof document === 'undefined') return null
+  const c = document.createElement('canvas')
+  c.width = 300
+  c.height = 350
+  const g = c.getContext('2d')
+  g.filter = 'blur(22px)'
+  g.fillStyle = 'rgba(55, 40, 28, 1)'
+  g.fillRect(60, 60, 180, 230)
+  const t = new THREE.CanvasTexture(c)
+  t.colorSpace = THREE.SRGBColorSpace
+  return t
+})()
+
 function Print({ service, position, rotation, scale, delay, ready }) {
   const ref = useRef()
   const map = usePhoto(service)
@@ -55,20 +70,29 @@ function Print({ service, position, rotation, scale, delay, ready }) {
     intro.current = THREE.MathUtils.damp(intro.current, ready ? 1 : 0, 1.6 - delay, dt)
     const k = intro.current
     ref.current.position.y = position[1] - (1 - k) * 3
-    ref.current.material.opacity = k * 0.55
-    ref.current.children[0].material.opacity = k * 0.62
+    const [shadow, paper, photo] = ref.current.children
+    shadow.material.opacity = k * 0.5
+    paper.material.opacity = k * 0.96
+    photo.material.opacity = k * 0.96
   })
   return (
-    <Float speed={prefersReducedMotion ? 0 : 1.4} rotationIntensity={0.35} floatIntensity={0.6}>
-      {/* white paper border, then the photo */}
-      <mesh ref={ref} position={position} rotation={rotation} scale={scale}>
-        <planeGeometry args={[2.2, 2.7]} />
-        <meshBasicMaterial color="#f4f2ea" transparent toneMapped={false} />
+    <Float speed={prefersReducedMotion ? 0 : 0.9} rotationIntensity={0.18} floatIntensity={0.35}>
+      <group ref={ref} position={position} rotation={rotation} scale={scale}>
+        {/* soft shadow on the wall, light coming from the upper right */}
+        <mesh position={[-0.16, -0.2, -0.05]}>
+          <planeGeometry args={[3.0, 3.5]} />
+          <meshBasicMaterial map={SHADOW} transparent depthWrite={false} toneMapped={false} />
+        </mesh>
+        {/* white paper border, then the photo */}
+        <mesh>
+          <planeGeometry args={[2.2, 2.7]} />
+          <meshBasicMaterial color="#fbf8f2" transparent toneMapped={false} />
+        </mesh>
         <mesh position-z={0.01}>
           <planeGeometry args={[2.0, 2.5]} />
           <meshBasicMaterial map={map} transparent toneMapped={false} />
         </mesh>
-      </mesh>
+      </group>
     </Float>
   )
 }
@@ -91,10 +115,10 @@ function Prints({ ready }) {
   // Wide screens: they orbit the left and right sides.
   const layout = portrait
     ? [
-        { position: [-w * 0.42, h * 0.4, -1], rotation: [0.1, 0.3, 0.16], scale: 0.62 },
-        { position: [w * 0.44, h * 0.36, -2], rotation: [0.05, -0.35, -0.14], scale: 0.62 },
-        { position: [-w * 0.46, -h * 0.4, -2], rotation: [-0.1, 0.3, -0.12], scale: 0.6 },
-        { position: [w * 0.42, -h * 0.43, -1], rotation: [-0.05, -0.3, 0.15], scale: 0.6 },
+        { position: [-w * 0.5, h * 0.36, -1], rotation: [0.1, 0.3, 0.12], scale: 0.5 },
+        { position: [w * 0.52, h * 0.27, -2], rotation: [0.05, -0.35, -0.1], scale: 0.5 },
+        { position: [-w * 0.52, -h * 0.3, -2], rotation: [-0.1, 0.3, -0.1], scale: 0.48 },
+        { position: [w * 0.5, -h * 0.4, -1], rotation: [-0.05, -0.3, 0.12], scale: 0.48 },
       ]
     : [
         { position: [-w * 0.42, h * 0.2, -1], rotation: [0.1, 0.45, 0.1], scale: 0.8 },
@@ -116,8 +140,6 @@ export default function BgScene({ ready }) {
     >
       <Rig>
         <Prints ready={ready} />
-        <Sparkles count={60} scale={[16, 10, 6]} size={3} speed={0.35} opacity={0.7} color="#d9b8ff" />
-        <Sparkles count={30} scale={[14, 9, 4]} size={5} speed={0.25} opacity={0.5} color="#ff7ad9" />
       </Rig>
     </Canvas>
   )

@@ -3,38 +3,6 @@ import { prefersReducedMotion } from './three/pointer'
 
 export const KEYWORDS = ['Portrait Photography', 'Wedding Photography', 'Event Photography', 'Senior Photos']
 
-/** 0 → 100 counter with the service keywords flicking past, then wipes away. */
-export function Preloader({ onDone }) {
-  const [n, setN] = useState(0)
-  const [leaving, setLeaving] = useState(false)
-  useEffect(() => {
-    const start = performance.now()
-    const dur = prefersReducedMotion ? 400 : 1900
-    let raf
-    const tick = (now) => {
-      const p = Math.min(1, (now - start) / dur)
-      setN(Math.round((1 - Math.pow(1 - p, 3)) * 100))
-      if (p < 1) raf = requestAnimationFrame(tick)
-      else {
-        setLeaving(true)
-        onDone()
-      }
-    }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [onDone])
-  const word = KEYWORDS[Math.min(KEYWORDS.length - 1, Math.floor(n / 26))]
-  return (
-    <div className={`preloader${leaving ? ' is-leaving' : ''}`} aria-hidden="true">
-      <div className="preloader__num">{n}</div>
-      <div className="preloader__bar">
-        <span style={{ transform: `scaleX(${n / 100})` }} />
-      </div>
-      <div className="preloader__word">( {word} )</div>
-    </div>
-  )
-}
-
 /** Types and deletes each keyword in the highlighted block. */
 export function Typed({ words, active }) {
   const [text, setText] = useState(prefersReducedMotion ? words[0] : '')

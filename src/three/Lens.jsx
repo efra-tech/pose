@@ -118,7 +118,7 @@ function Lens({ ready, shots }) {
           color="#000000"
           roughness={0.05}
           metalness={0}
-          iridescence={1}
+          iridescence={0.35}
           iridescenceIOR={1.6}
           iridescenceThicknessRange={[250, 650]}
           clearcoat={1}
@@ -134,13 +134,13 @@ function Lens({ ready, shots }) {
 export function StudioLights() {
   return (
     <>
-      <ambientLight intensity={0.35} />
-      <directionalLight position={[3, 4, 5]} intensity={1.4} />
+      {/* daylight from a window up and to the right, warm bounce from the room */}
+      <ambientLight intensity={0.5} color="#fff4e6" />
+      <directionalLight position={[4, 4, 5]} intensity={1.3} color="#fff1dc" />
       <Environment resolution={256} frames={1}>
-        <Lightformer form="rect" intensity={5} color="#ff5ad6" position={[3, 2, 4]} scale={[4, 1, 1]} />
-        <Lightformer form="rect" intensity={4} color="#4b6bff" position={[-3, -1, 3]} scale={[3, 2, 1]} />
-        <Lightformer form="ring" intensity={3} color="#ffffff" position={[-1, 3, 5]} scale={1.5} />
-        <Lightformer form="rect" intensity={2.5} color="#8a3dff" position={[0, -3, 2]} scale={[6, 1, 1]} />
+        <Lightformer form="rect" intensity={2.4} color="#fff6ea" position={[4, 3, 4]} scale={[3, 4, 1]} />
+        <Lightformer form="rect" intensity={0.8} color="#e9d8c2" position={[-4, -1, 3]} scale={[4, 3, 1]} />
+        <Lightformer form="rect" intensity={0.6} color="#d8e1dc" position={[0, -4, 2]} scale={[6, 1, 1]} />
       </Environment>
     </>
   )

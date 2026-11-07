@@ -1,5 +1,5 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
-import { Preloader, Typed, Clock, Cursor, Logo, KEYWORDS } from './components'
+import { lazy, Suspense, useEffect, useState } from 'react'
+import { Typed, Clock, Cursor, Logo, KEYWORDS } from './components'
 
 const LensCanvas = lazy(() => import('./three/Lens'))
 const BgScene = lazy(() => import('./three/BgScene'))
@@ -9,7 +9,6 @@ const EMAIL = 'mailto:posephotography0@gmail.com?subject=Booking%20a%20shoot%20w
 const INSTAGRAM = 'https://www.instagram.com/posephotography._/'
 
 export default function App() {
-  const [loaded, setLoaded] = useState(false)
   const [fontsReady, setFontsReady] = useState(false)
   const [shots, setShots] = useState(0)
   const [flash, setFlash] = useState(0)
@@ -18,13 +17,16 @@ export default function App() {
   useEffect(() => {
     const done = () => setFontsReady(true)
     Promise.race([
-      Promise.all([document.fonts.load('600 30px "Space Grotesk"'), document.fonts.load('700 46px "Space Grotesk"')]),
+      Promise.all([
+        document.fonts.load('600 30px "Inter"'),
+        document.fonts.load('600 46px "Playfair Display"'),
+        document.fonts.load('italic 500 46px "Playfair Display"'),
+      ]),
       new Promise((r) => setTimeout(r, 2500)),
     ]).then(done, done)
   }, [])
 
-  const onLoaded = useCallback(() => setLoaded(true), [])
-  const ready = loaded && fontsReady
+  const ready = fontsReady
 
   const shoot = () => {
     setShots((s) => s + 1)
@@ -34,7 +36,6 @@ export default function App() {
 
   return (
     <div className={`app${ready ? ' is-ready' : ''}`}>
-      <Preloader onDone={onLoaded} />
       <Cursor />
 
       <div className="backdrop" aria-hidden="true" />

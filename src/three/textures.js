@@ -79,7 +79,7 @@ export function engravingTexture() {
   g.fillStyle = '#0c0c10'
   g.fillRect(0, 0, s, s)
   const text = 'POSE PHOTOGRAPHY · PORTRAIT · WEDDING · EVENT · SENIOR PHOTOS · 50mm 1:1.4 · '
-  g.font = '600 30px "Space Grotesk", sans-serif'
+  g.font = '600 28px "Inter", sans-serif'
   g.fillStyle = 'rgba(244,242,234,.78)'
   g.textAlign = 'center'
   g.textBaseline = 'middle'
@@ -121,51 +121,29 @@ export function cardTexture(label, hueA, hueB) {
   bg.addColorStop(1, hueB)
   g.fillStyle = bg
   g.fillRect(0, 0, w, h)
-  // soft bokeh
-  for (let i = 0; i < 14; i++) {
-    const x = Math.random() * w
-    const y = Math.random() * h
-    const r = 20 + Math.random() * 70
-    const rg = g.createRadialGradient(x, y, 0, x, y, r)
-    rg.addColorStop(0, 'rgba(255,255,255,.22)')
-    rg.addColorStop(1, 'rgba(255,255,255,0)')
-    g.fillStyle = rg
-    g.beginPath()
-    g.arc(x, y, r, 0, Math.PI * 2)
-    g.fill()
+  // soft natural light falling across the print
+  const glow = g.createRadialGradient(w * 0.75, h * 0.2, 0, w * 0.75, h * 0.2, w * 0.9)
+  glow.addColorStop(0, 'rgba(255,248,235,.35)')
+  glow.addColorStop(1, 'rgba(255,248,235,0)')
+  g.fillStyle = glow
+  g.fillRect(0, 0, w, h)
+  // fine film grain
+  const img = g.getImageData(0, 0, w, h)
+  for (let i = 0; i < img.data.length; i += 4) {
+    const n = (Math.random() - 0.5) * 14
+    img.data[i] += n
+    img.data[i + 1] += n
+    img.data[i + 2] += n
   }
-  // viewfinder corners
-  g.strokeStyle = 'rgba(255,255,255,.85)'
-  g.lineWidth = 4
-  const p = 34
-  const l = 46
-  ;[
-    [p, p, 1, 1],
-    [w - p, p, -1, 1],
-    [p, h - p, 1, -1],
-    [w - p, h - p, -1, -1],
-  ].forEach(([x, y, dx, dy]) => {
-    g.beginPath()
-    g.moveTo(x, y + dy * l)
-    g.lineTo(x, y)
-    g.lineTo(x + dx * l, y)
-    g.stroke()
-  })
-  g.fillStyle = '#f4f2ea'
+  g.putImageData(img, 0, 0)
+
+  g.fillStyle = '#f7f2ea'
   g.textAlign = 'left'
   const lines = label.split('\n')
-  const firstY = h - 64 - (lines.length - 1) * 50
-  g.font = '500 22px "Space Grotesk", sans-serif'
-  g.fillText('( POSE PHOTOGRAPHY )', 60, firstY - 56)
-  g.font = '700 46px "Space Grotesk", sans-serif'
-  lines.forEach((line, i) => g.fillText(line, 60, firstY + i * 50))
-  g.fillStyle = '#ff5a5a'
-  g.beginPath()
-  g.arc(w - 72, 72, 9, 0, Math.PI * 2)
-  g.fill()
-  g.fillStyle = 'rgba(255,255,255,.85)'
-  g.font = '500 20px "Space Grotesk", sans-serif'
-  g.textAlign = 'right'
-  g.fillText('REC', w - 92, 79)
+  const firstY = h - 70 - (lines.length - 1) * 54
+  g.font = '600 18px "Inter", sans-serif'
+  g.fillText('POSE PHOTOGRAPHY', 56, firstY - 58)
+  g.font = 'italic 500 50px "Playfair Display", serif'
+  lines.forEach((line, i) => g.fillText(line, 56, firstY + i * 54))
   return toTexture(c)
 }

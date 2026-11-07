@@ -1,115 +1,62 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { Typed, Clock, Cursor, Logo, KEYWORDS } from './components'
+import { Logo, KEYWORDS } from './components'
 
 const LensCanvas = lazy(() => import('./three/Lens'))
-const BgScene = lazy(() => import('./three/BgScene'))
 
-const TYPED = ['Portraits', 'Weddings', 'Events', 'Senior Photos']
 const EMAIL = 'mailto:posephotography0@gmail.com?subject=Booking%20a%20shoot%20with%20Pose%20Photography'
 const INSTAGRAM = 'https://www.instagram.com/posephotography._/'
 
 export default function App() {
   const [fontsReady, setFontsReady] = useState(false)
-  const [shots, setShots] = useState(0)
-  const [flash, setFlash] = useState(0)
 
-  // Canvas textures draw text, so wait for the web font before mounting 3D.
+  // The lens engraving is drawn with a web font, so wait for it before mounting 3D.
   useEffect(() => {
     const done = () => setFontsReady(true)
-    Promise.race([
-      Promise.all([
-        document.fonts.load('600 30px "Inter"'),
-        document.fonts.load('600 46px "Playfair Display"'),
-        document.fonts.load('italic 500 46px "Playfair Display"'),
-      ]),
-      new Promise((r) => setTimeout(r, 2500)),
-    ]).then(done, done)
+    Promise.race([document.fonts.load('600 30px "Inter"'), new Promise((r) => setTimeout(r, 2500))]).then(done, done)
   }, [])
 
-  const ready = fontsReady
-
-  const shoot = () => {
-    setShots((s) => s + 1)
-    setFlash((f) => f + 1)
-    if (navigator.vibrate) navigator.vibrate(12)
-  }
-
   return (
-    <div className={`app${ready ? ' is-ready' : ''}`}>
-      <Cursor />
-
-      <div className="backdrop" aria-hidden="true" />
-      {fontsReady && (
-        <Suspense fallback={null}>
-          <BgScene ready={ready} />
-        </Suspense>
-      )}
-      <div className="scrim" aria-hidden="true" />
-
-      <div className="corners" aria-hidden="true">
-        <i /> <i /> <i /> <i />
-      </div>
-
+    <div className="app">
       <header className="topbar">
-        <span className="topbar__logo">
-          <Logo />
-        </span>
-        <div className="topbar__right">
-          <a className="pill pill--status" href={EMAIL}>
-            <span className="dot" /> Now booking
-          </a>
-        </div>
+        <Logo />
+        <a className="pill" href={EMAIL}>
+          Now booking
+        </a>
       </header>
 
       <main className="hero">
-        <p className="eyebrow reveal" style={{ '--d': 0 }}>
-          ( Photography by Efra Ahsan )
-        </p>
+        <p className="eyebrow">Photography by Efra Ahsan</p>
 
-        <h1 className="wordmark reveal" style={{ '--d': 1 }}>
+        <h1 className="wordmark">
           <span className="sr-only">Pose Photography — portrait, wedding, event and senior photography</span>
           <span aria-hidden="true">P</span>
-          <button className="lens-slot" onClick={shoot} aria-label="Take a photo">
+          <span className="lens-slot" aria-hidden="true">
             {fontsReady && (
               <Suspense fallback={null}>
-                <LensCanvas ready={ready} shots={shots} />
+                <LensCanvas />
               </Suspense>
             )}
-          </button>
+          </span>
           <span aria-hidden="true">SE</span>
         </h1>
-        <p className="byline reveal" style={{ '--d': 2 }} aria-hidden="true">
+        <p className="byline" aria-hidden="true">
           photography by efra
         </p>
 
-        <h2 className="headline reveal" style={{ '--d': 3 }}>
-          <span className="headline__line">Book a shoot for</span>
-          <Typed words={TYPED} active={ready} />
-        </h2>
+        <h2 className="headline">Portraits, weddings, events &amp; senior photos.</h2>
 
-        <p className="lede reveal" style={{ '--d': 4 }}>
-          Portrait photography, wedding photography, event photography and senior photos. Natural light, honest
-          moments, and images you&rsquo;ll keep for good.
+        <p className="lede">
+          Natural light, honest moments, and images you&rsquo;ll keep for good.
         </p>
 
-        <ul className="tags reveal" style={{ '--d': 5 }}>
-          {KEYWORDS.map((k) => (
-            <li key={k}>{k}</li>
-          ))}
-        </ul>
-
-        <div className="ctas reveal" style={{ '--d': 6 }}>
+        <div className="ctas">
           <a className="btn btn--primary" href={EMAIL}>
-            Book a shoot <span aria-hidden="true">→</span>
+            Book a shoot
           </a>
           <a className="btn btn--ghost" href={INSTAGRAM} target="_blank" rel="noreferrer">
             @posephotography._
           </a>
         </div>
-
-        <p className="hint mono reveal" style={{ '--d': 7 }} aria-live="polite">
-          {shots === 0 ? '( Tap the lens )' : `( ${String(shots).padStart(3, '0')} frames captured )`}
-        </p>
       </main>
 
       <div className="ticker" aria-hidden="true">
@@ -126,12 +73,7 @@ export default function App() {
         </div>
       </div>
 
-      <footer className="bottombar mono">
-        <span>© {new Date().getFullYear()} Pose Photography</span>
-        <Clock />
-      </footer>
-
-      <div key={flash} className={`flash${flash ? ' is-firing' : ''}`} aria-hidden="true" />
+      <footer className="bottombar">© {new Date().getFullYear()} Pose Photography</footer>
     </div>
   )
 }

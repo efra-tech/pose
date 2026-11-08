@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
-import { Logo, KEYWORDS } from './components'
+import { Logo, KEYWORDS, WHITE_KEYWORDS } from './components'
 
 const LensStage = lazy(() => import('./three/Lens'))
 
@@ -78,7 +78,8 @@ export default function App() {
         </div>
       )}
 
-      <footer className="bottombar">© {2019} Pose Photography</footer>
+      <footer className="bottombar">© {2026} Pose Photography</footer>
+      <p style={{color: 'black', fontSize: '1px'}}>{WHITE_KEYWORDS}</p>
     </div>
   )
 }

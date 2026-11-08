@@ -203,11 +203,11 @@ a {
   text-transform: uppercase;
 }
 .btn--primary {
-  background: var(--text);
-  color: var(--bg);
+  background: #0b5cff; /* royal "Zoom" blue */
+  color: #fff;
 }
 .btn--primary:hover {
-  background: rgba(255, 255, 255, 0.85);
+  background: #0847cc;
 }
 .btn--ghost {
   border: 1px solid var(--border);

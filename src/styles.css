@@ -143,25 +143,16 @@ a {
   margin: 0 0.03em;
   flex: none;
 }
-.lens-canvas {
-  position: absolute !important;
-  width: 190% !important;
-  height: 190% !important;
-  left: -45%;
-  top: -45%;
-  pointer-events: none;
-}
-/* hidden until the intro lens lands on top of it */
-.lens-slot.is-waiting .lens-canvas {
-  visibility: hidden;
-}
-
-/* full-screen layer the intro lens flies through; removed when it lands */
-.lens-intro {
-  position: fixed !important;
+/* Full-screen layer the lens is drawn in. Above everything while it flies in,
+   then drops below the top bar and banner once it has landed in the O. */
+.lens-layer {
+  position: fixed;
   inset: 0;
   z-index: 30;
   pointer-events: none;
+}
+.lens-layer.is-landed {
+  z-index: 5;
 }
 
 .byline {

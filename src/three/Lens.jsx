@@ -128,50 +128,38 @@ function Lighting() {
 }
 
 const cameraProps = { position: [0, 0, 4000], near: 1, far: 10000, zoom: 1 }
-
-/** Resting lens inside the "O" slot (canvas is 190% of the slot). Renders once. */
-function RestingLens() {
-  const aperture = useAperture()
-  const { size, invalidate } = useThree()
-  useEffect(() => {
-    aperture.set(APERTURE_OPEN)
-    invalidate()
-  }, [aperture, invalidate])
-  const radius = size.width / 1.9 / 2 / LENS_RADIUS
-  return (
-    <group scale={radius} rotation={[REST_TILT[0], REST_TILT[1], 0]}>
-      <LensModel aperture={aperture} />
-    </group>
-  )
-}
-
-export default function LensCanvas() {
-  return (
-    <Canvas className="lens-canvas" orthographic frameloop="demand" dpr={[1, 2]} camera={cameraProps} gl={{ alpha: true, antialias: true }} aria-hidden="true">
-      <Lighting />
-      <RestingLens />
-    </Canvas>
-  )
-}
+const MAX_STEP = 1 / 30 // a slow frame can only advance the intro this much, so it never skips
 
 /**
-  Intro: the lens starts filling the screen width with its aperture shut, the
-  blades open, then it spins and pulls back into the "O". Plays once per load.
+  One lens, one canvas. On load it fills the screen width with the shutter shut,
+  the blades open, then it spins and pulls back into the "O" and stays there.
+  After landing the canvas stops rendering and only redraws on scroll/resize.
 */
-function IntroLens({ slotRef, onDone }) {
+function StageLens({ slotRef, animate, onLanded }) {
   const group = useRef()
   const aperture = useAperture()
-  const start = useRef(null)
-  const done = useRef(false)
-  const { size } = useThree()
+  const { gl, scene, camera, size, invalidate, setFrameloop } = useThree()
+  const clock = useRef({ warm: false, t: animate ? 0 : INTRO_SECONDS, landed: false })
 
-  useFrame((state) => {
-    if (done.current) return
-    if (start.current === null) start.current = state.clock.elapsedTime
-    const t = state.clock.elapsedTime - start.current
-    const p = clamp01(t / INTRO_SECONDS)
+  // Compile every shader before the clock starts, so the first frames are smooth.
+  useEffect(() => {
+    gl.compile(scene, camera)
+    clock.current.warm = true
+  }, [gl, scene, camera])
 
-    // where the "O" sits on screen, in pixels from the centre
+  // Once landed, only redraw when the page moves or resizes.
+  useEffect(() => {
+    const redraw = () => invalidate()
+    window.addEventListener('scroll', redraw, { passive: true })
+    return () => window.removeEventListener('scroll', redraw)
+  }, [invalidate])
+
+  useFrame((_, delta) => {
+    const c = clock.current
+    if (c.warm && !c.landed) c.t = Math.min(INTRO_SECONDS, c.t + Math.min(delta, MAX_STEP))
+    const t = c.t
+
+    // where the "O" sits, in pixels from the centre of the screen
     const rect = slotRef.current.getBoundingClientRect()
     const tx = rect.left + rect.width / 2 - size.width / 2
     const ty = -(rect.top + rect.height / 2 - size.height / 2)
@@ -182,18 +170,18 @@ function IntroLens({ slotRef, onDone }) {
     const open = easeInOutCubic(clamp01((t - SHUTTER_START) / SHUTTER_LENGTH))
     aperture.set(0.001 + (APERTURE_OPEN - 0.001) * open)
 
-    // then: tunnel back into the "O" (zoom is interpolated in log space so it feels even)
+    // then: tunnel back into the "O" (zoom interpolated in log space so it feels even)
     const k = clamp01((t - PULLBACK_START) / (INTRO_SECONDS - PULLBACK_START))
     const e = easeInOutCubic(k)
     const settle = easeOutBack(k)
-    const r = startR * Math.pow(endR / startR, e)
-    group.current.scale.setScalar(r)
+    group.current.scale.setScalar(startR * Math.pow(endR / startR, e))
     group.current.position.set(tx * e, ty * e, 0)
     group.current.rotation.set(REST_TILT[0] * settle, REST_TILT[1] * settle, (1 - e) * -Math.PI * 1.25)
 
-    if (p >= 1) {
-      done.current = true
-      onDone()
+    if (t >= INTRO_SECONDS && !c.landed) {
+      c.landed = true
+      setFrameloop('demand')
+      onLanded()
     }
   })
 
@@ -204,11 +192,19 @@ function IntroLens({ slotRef, onDone }) {
   )
 }
 
-export function LensIntro({ slotRef, onDone }) {
+export default function LensStage({ slotRef, animate, onLanded }) {
   return (
-    <Canvas className="lens-intro" orthographic dpr={[1, 2]} camera={cameraProps} gl={{ alpha: true, antialias: true }} aria-hidden="true">
+    <Canvas
+      className="lens-stage"
+      orthographic
+      frameloop={animate ? 'always' : 'demand'}
+      dpr={[1, 2]}
+      camera={cameraProps}
+      gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
+      aria-hidden="true"
+    >
       <Lighting />
-      <IntroLens slotRef={slotRef} onDone={onDone} />
+      <StageLens slotRef={slotRef} animate={animate} onLanded={onLanded} />
     </Canvas>
   )
 }

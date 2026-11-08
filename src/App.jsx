@@ -1,13 +1,18 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Logo, KEYWORDS } from './components'
 
 const LensCanvas = lazy(() => import('./three/Lens'))
+const LensIntro = lazy(() => import('./three/Lens').then((m) => ({ default: m.LensIntro })))
+
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 const EMAIL = 'mailto:posephotography0@gmail.com?subject=Booking%20a%20shoot%20with%20Pose%20Photography'
-const INSTAGRAM = 'https://www.instagram.com/posephotography._/'
 
 export default function App() {
   const [fontsReady, setFontsReady] = useState(false)
+  // the lens flies in from full screen once per page load, then stays put
+  const [introDone, setIntroDone] = useState(reducedMotion)
+  const slotRef = useRef(null)
 
   // The lens engraving is drawn with a web font, so wait for it before mounting 3D.
   useEffect(() => {
@@ -30,7 +35,7 @@ export default function App() {
         <h1 className="wordmark">
           <span className="sr-only">Pose Photography — portrait, wedding, event and senior photography</span>
           <span aria-hidden="true">P</span>
-          <span className="lens-slot" aria-hidden="true">
+          <span className={`lens-slot${introDone ? '' : ' is-waiting'}`} ref={slotRef} aria-hidden="true">
             {fontsReady && (
               <Suspense fallback={null}>
                 <LensCanvas />
@@ -53,9 +58,7 @@ export default function App() {
           <a className="btn btn--primary" href={EMAIL}>
             Book a shoot
           </a>
-          <a className="btn btn--ghost" href={INSTAGRAM} target="_blank" rel="noreferrer">
-            @posephotography._
-          </a>
+
         </div>
       </main>
 
@@ -72,6 +75,12 @@ export default function App() {
           ))}
         </div>
       </div>
+
+      {fontsReady && !introDone && (
+        <Suspense fallback={null}>
+          <LensIntro slotRef={slotRef} onDone={() => setIntroDone(true)} />
+        </Suspense>
+      )}
 
       <footer className="bottombar">© {new Date().getFullYear()} Pose Photography</footer>
     </div>

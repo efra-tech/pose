@@ -151,6 +151,18 @@ a {
   top: -45%;
   pointer-events: none;
 }
+/* hidden until the intro lens lands on top of it */
+.lens-slot.is-waiting .lens-canvas {
+  visibility: hidden;
+}
+
+/* full-screen layer the intro lens flies through; removed when it lands */
+.lens-intro {
+  position: fixed !important;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+}
 
 .byline {
   margin: 14px 0 0;
